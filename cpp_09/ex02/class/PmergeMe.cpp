@@ -131,6 +131,15 @@ void PmergeMe::merge_insertion_sort(std::vector<int> &arr, int l, int r)
         }
         chunk_size *= 2;
     }
+    // if (size % 2 == 0)
+    // {
+    //     int value = arr[size]; // 退避
+    //     arr.erase(arr.begin() + size); // 元の位置から削除
+    //     std::vector<int>::iterator index = bisect(arr.begin(), arr.begin() + size, value);
+    //     std::cout << "index: " << index - arr.begin() << std::endl;
+    //     std::cout << "value: " << value << std::endl;
+    //     arr.insert(index, value); // 目的の位置に挿入
+    // }
 }
 
 /*
