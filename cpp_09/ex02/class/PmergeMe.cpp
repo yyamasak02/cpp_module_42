@@ -110,37 +110,79 @@ void PmergeMe::merge_insert(std::vector<int> &arr, int l, int mid, int r, int ch
  * @param l: left index
  * @param r: right index
  */
-void PmergeMe::merge_insertion_sort(std::vector<int> &arr, int l, int r)
+void PmergeMe::merge_insertion_sort(std::vector<int> &arr, int l, int r, int chunk_size)
 {
     if (r - l <= 1)
     {
         return;
     }
-    int mid = (l + r) / 2;
-    // std::cout << "index: [l, mid, r] = [" << l << ", " << (l + r) / 2 << ", " << r << "]" << std::endl;
-    int size = r - l;
-    int chunk_size = 2;
-    while (chunk_size <= size)
+    std::vector<int> arr_b;
+    std::vector<int> arr_a;
+    for (int i = l; i + 1 < r; i += 2)
     {
-        for (int i = l; i < r; i += chunk_size)
-        {
-            int current_l = i;
-            int current_r = std::min(i + chunk_size, r);
-            int current_mid = (current_l + current_r) / 2;
-            this->PmergeMe::merge_insert(arr, current_l, current_mid, current_r, chunk_size);
-        }
-        chunk_size *= 2;
+        int min_v = std::min(arr[i], arr[i + 1]);
+        int max_v = std::max(arr[i], arr[i + 1]);
+        arr_b.push_back(min_v);
+        arr_a.push_back(max_v);
     }
-    // if (size % 2 == 0)
-    // {
-    //     int value = arr[size]; // 退避
-    //     arr.erase(arr.begin() + size); // 元の位置から削除
-    //     std::vector<int>::iterator index = bisect(arr.begin(), arr.begin() + size, value);
-    //     std::cout << "index: " << index - arr.begin() << std::endl;
-    //     std::cout << "value: " << value << std::endl;
-    //     arr.insert(index, value); // 目的の位置に挿入
-    // }
+    if ((r - l) % 2 == 1)
+    {
+        arr_a.push_back(arr[r - 1]);
+    }
+    this->merge_insertion_sort(arr_a, 0, arr_a.size(), chunk_size * 2);
+    for (int i = 0; i < (int)arr_b.size(); ++i)
+    {
+        std::vector<int>::iterator it = std::lower_bound(arr_a.begin(), arr_a.end(), arr_b[i]);
+        arr_a.insert(it, arr_b[i]);
+    }
+    arr = arr_a;
 }
+
+// void PmergeMe::ford_johnson_sort(std::vector<int> &arr, int l, int r)
+// {
+//     int size = r - l;
+//     if (size <= 1)
+//         return;
+
+//     // 1. ペア分け
+//     std::vector<int> main_chain;
+//     std::vector<int> pending;
+
+//     for (int i = l; i + 1 < r; i += 2)
+//     {
+//         int a = arr[i];
+//         int b = arr[i + 1];
+//         if (a < b)
+//         {
+//             main_chain.push_back(b);
+//             pending.push_back(a);
+//         }
+//         else
+//         {
+//             main_chain.push_back(a);
+//             pending.push_back(b);
+//         }
+//     }
+
+//     // 奇数個のときは最後の要素が余る
+//     if ((size % 2) == 1)
+//         pending.push_back(arr[r - 1]);
+
+//     // 2. main_chain を再帰的にソート
+//     ford_johnson_sort(main_chain, 0, main_chain.size());
+
+//     // 3. pending をスプレッド順で挿入（ここでは単純に1つずつでOK）
+//     for (std::vector<int>::iterator it = pending.begin(); it != pending.end(); ++it)
+//     {
+//         int val = *it;
+//         std::vector<int>::iterator insert_pos = std::lower_bound(main_chain.begin(), main_chain.end(), val);
+//         main_chain.insert(insert_pos, val);
+//     }
+
+//     // 4. arr に結果を反映
+//     for (int i = 0; i < (int)main_chain.size(); ++i)
+//         arr[l + i] = main_chain[i];
+// }
 
 /*
  * Insertion sort algorithm
@@ -290,7 +332,8 @@ void PmergeMe::execute_sort(const int *array, const int size)
     // this->merge_sort(array_vec, 0, size);
     // this->insert_sort(array_vec, size);
     // this->binary_insert_sort(array_vec, size);
-    this->merge_insertion_sort(array_vec, 0, size - 1);
+    this->merge_insertion_sort(array_vec, 0, size - 1, 2);
+    // this->ford_johnson_sort(array_vec, 0, size - 1);
     this->show(array_vec);
 }
 

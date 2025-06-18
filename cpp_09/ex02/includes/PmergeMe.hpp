@@ -10,7 +10,7 @@ class PmergeMe
   private:
     PmergeMe(const PmergeMe &copy);
     PmergeMe &operator=(const PmergeMe &copy);
-    void merge_insertion_sort(std::vector<int> &arr, int l, int r);
+    void merge_insertion_sort(std::vector<int> &arr, int l, int r, int chunk_size);
     void merge_insert(std::vector<int> &arr, int l, int mid, int r, int chunk_size);
     void insert_sort(std::vector<int> &arr, int array_size);
     void merge_sort(std::vector<int> &arr, int l, int r);
