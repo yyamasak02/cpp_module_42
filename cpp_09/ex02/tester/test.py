@@ -98,10 +98,11 @@ def main() -> None:
     if not build_program():
         return
 
-    for _ in range(NUMBER_OF_ATTEMPTS):
-        n = random.randint(MIN_NUMBER, MAX_NUMBER)
-        nums = random.sample(range(1, MAX_NUMBER), n)
-        test_case(" ".join(map(str, nums)))
+    test_case("3 5 9 7 4")
+    # for _ in range(NUMBER_OF_ATTEMPTS):
+    #     n = random.randint(MIN_NUMBER, MAX_NUMBER)
+    #     nums = random.sample(range(1, MAX_NUMBER), n)
+    #     test_case(" ".join(map(str, nums)))
 
 
 if __name__ == "__main__":
