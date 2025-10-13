@@ -4,6 +4,7 @@ objs
 .vscode
 .venv
 bureaucrat
+__pycache__
 
 # Compiled Object files
 *.slo

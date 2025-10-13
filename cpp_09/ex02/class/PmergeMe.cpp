@@ -5,28 +5,28 @@
 
 PmergeMe::PmergeMe()
 {
-    std::cout << "PmergeMe: "
-              << "default constructor called" << std::endl;
+    // std::cout << "PmergeMe: "
+    //           << "default constructor called" << std::endl;
 }
 
 PmergeMe::~PmergeMe()
 {
-    std::cout << "PmergeMe: "
-              << "default destructor called" << std::endl;
+    // std::cout << "PmergeMe: "
+    //           << "default destructor called" << std::endl;
 }
 
 PmergeMe::PmergeMe(const PmergeMe &copy)
 {
     (void)copy;
-    std::cout << "PmergeMe: "
-              << "copy constructor called" << std::endl;
+    // std::cout << "PmergeMe: "
+    //           << "copy constructor called" << std::endl;
 }
 
 PmergeMe &PmergeMe::operator=(const PmergeMe &copy)
 {
     (void)copy;
-    std::cout << "PmergeMe: "
-              << "copy assignment called" << std::endl;
+    // std::cout << "PmergeMe: "
+    //           << "copy assignment called" << std::endl;
     return *this;
 }
 
@@ -126,7 +126,7 @@ void PmergeMe::execute_sort(const int *array, const int size)
     this->merge_insertion_sort(array_vec, 0, size, 2);
 
     // Display sorted sequence
-    std::cout << "After:  ";
+    std::cout << "After: ";
     this->show_container(array_vec);
 }
 
@@ -138,7 +138,7 @@ void PmergeMe::execute_sort_deque(const int *array, const int size)
     this->merge_insertion_sort_deque(array_deque, 0, size, 2);
 
     // Display sorted sequence
-    std::cout << "After:  ";
+    std::cout << "After: ";
     this->show_container(array_deque);
 }
 
