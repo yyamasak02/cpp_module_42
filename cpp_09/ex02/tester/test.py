@@ -4,6 +4,7 @@ import random
 import subprocess
 from enum import Enum
 from typing import Optional
+import logging
 
 PROGRAME_FILE: str = "PmergeMe"
 WORK_SPACE: str = "/home/yuhei0221/work/cursus/cpp_module_42/cpp_09/ex02"
@@ -66,11 +67,11 @@ def verify_result(
 
 
 def test_case(arg_str: str) -> None:
-    DEBUG_PRINT: bool = False
-    if DEBUG_PRINT is True: print(f"[TEST] args = {arg_str}")
+    DEBUG_PRINT: bool = True
+    if DEBUG_PRINT is True: print(f"[TEST] {arg_str}")
     args = arg_str.split()
     expected = " ".join(map(str, sorted(map(int, args))))
-    if DEBUG_PRINT is True: print(f"[EXPECTED] {expected}")
+    if DEBUG_PRINT is True: print(f"[EXPT] {expected}")
     stdout_lines = run_program(args)
     groups = group_output(stdout_lines)
     verify_result(groups=groups, expected=expected)
@@ -93,16 +94,16 @@ def build_program() -> bool:
 
 def main() -> None:
     NUMBER_OF_ATTEMPTS: int = 5
-    MIN_NUMBER: int = 5
-    MAX_NUMBER: int = 10**5
+    MIN_NUMBER: int = 1
+    MAX_NUMBER: int = 22
     if not build_program():
         return
 
-    test_case("3 5 9 7 4")
-    # for _ in range(NUMBER_OF_ATTEMPTS):
-    #     n = random.randint(MIN_NUMBER, MAX_NUMBER)
-    #     nums = random.sample(range(1, MAX_NUMBER), n)
-    #     test_case(" ".join(map(str, nums)))
+    # test_case("3 5 9 7 4")
+    for _ in range(NUMBER_OF_ATTEMPTS):
+        n = random.randint(MIN_NUMBER, MAX_NUMBER)
+        nums = random.sample(range(1, MAX_NUMBER), n)
+        test_case(" ".join(map(str, nums)))
 
 
 if __name__ == "__main__":

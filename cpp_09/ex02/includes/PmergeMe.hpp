@@ -14,9 +14,18 @@ class PmergeMe
   private:
     PmergeMe(const PmergeMe &copy);
     PmergeMe &operator=(const PmergeMe &copy);
-    void merge_insertion_sort(std::vector<int> &arr, int l, int r, int chunk_size);
-    void merge_insertion_sort_deque(std::deque<int> &arr, int l, int r, int chunk_size);
+    size_t merge_insertion_sort(std::vector<int> &arr, int l, int r, int chunk_size);
+    size_t merge_insertion_sort_deque(std::deque<int> &arr, int l, int r, int chunk_size);
     template <typename Container> void show_container(const Container &arr) const;
+    static std::vector<size_t> generate_jacobsthal_order(size_t n);
+    struct binary_search_result
+    {
+        size_t index;
+        size_t comparisons;
+        binary_search_result(size_t i, int c) : index(i), comparisons(c) {}
+    };
+    binary_search_result binary_search(const std::vector<int> &arr, int value);
+    binary_search_result binary_search(const std::deque<int> &arr, int value);
 
   public:
     PmergeMe();
