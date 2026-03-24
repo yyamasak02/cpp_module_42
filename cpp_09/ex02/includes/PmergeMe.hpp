@@ -1,39 +1,20 @@
 #pragma once
 
-#include <algorithm>
 #include <deque>
+#include <iomanip>
+#include <iostream>
 #include <string>
 #include <vector>
-// #include <iostream>
-
-#define ERR_NO 1
-#define NORMAL 0
 
 class PmergeMe
 {
-  private:
-    PmergeMe(const PmergeMe &copy);
-    PmergeMe &operator=(const PmergeMe &copy);
-    size_t merge_insertion_sort(std::vector<int> &arr, int l, int r, int chunk_size);
-    size_t merge_insertion_sort_deque(std::deque<int> &arr, int l, int r, int chunk_size);
-    template <typename Container> void show_container(const Container &arr) const;
-    static std::vector<size_t> generate_jacobsthal_order(size_t n);
-    struct binary_search_result
-    {
-        size_t index;
-        size_t comparisons;
-        binary_search_result(size_t i, int c) : index(i), comparisons(c) {}
-    };
-    binary_search_result binary_search(const std::vector<int> &arr, int value);
-    binary_search_result binary_search(const std::deque<int> &arr, int value);
-
   public:
     PmergeMe();
     ~PmergeMe();
     static int convert_positive_int(const std::string &str);
     static int *create_numbers(char **str_ptr, int size);
-    void execute_sort(const int *array, const int size);
-    void execute_sort_deque(const int *array, const int size);
+    void execute_sort(const int *array, int size);
+
     class PmergeMeException : public std::exception
     {
       public:
@@ -44,4 +25,37 @@ class PmergeMe
       public:
         virtual const char *what() const throw();
     };
+
+  private:
+    PmergeMe(const PmergeMe &copy);
+    PmergeMe &operator=(const PmergeMe &copy);
+
+    typedef std::vector<int> Chain;
+    typedef std::vector<Chain> ChainVec;
+    typedef std::deque<int> ChainDeq;
+    typedef std::deque<ChainDeq> ChainDeqVec;
+
+    int compare_count_;
+
+    static int jacobsthal_number(int n);
+
+    template <typename Iter> Iter find_insert_pos(Iter first, Iter last, int val)
+    {
+        while (first < last)
+        {
+            Iter mid = first + (last - first) / 2;
+            compare_count_++;
+            if (mid->back() < val)
+                first = mid + 1;
+            else
+                last = mid;
+        }
+        return first;
+    }
+
+    ChainVec fj_sort(ChainVec &groups);
+    ChainDeqVec fj_sort(ChainDeqVec &groups);
+    void sort_vec(ChainVec &vec);
+    void sort_deq(ChainDeqVec &deq);
+    PmergeMe *resetCompareCount();
 };

@@ -1,58 +1,37 @@
 #include "../includes/PmergeMe.hpp"
-#include <iostream>
+#include <climits>
+#include <ctime>
 #include <sstream>
-#include <vector>
 
-PmergeMe::PmergeMe()
-{
-    // std::cout << "PmergeMe: "
-    //           << "default constructor called" << std::endl;
-}
+PmergeMe::PmergeMe() : compare_count_(0) {}
 
-PmergeMe::~PmergeMe()
-{
-    // std::cout << "PmergeMe: "
-    //           << "default destructor called" << std::endl;
-}
+PmergeMe::~PmergeMe() {}
 
-PmergeMe::PmergeMe(const PmergeMe &copy)
-{
-    (void)copy;
-    // std::cout << "PmergeMe: "
-    //           << "copy constructor called" << std::endl;
-}
+PmergeMe::PmergeMe(const PmergeMe &copy) : compare_count_(copy.compare_count_) {}
 
 PmergeMe &PmergeMe::operator=(const PmergeMe &copy)
 {
-    (void)copy;
-    // std::cout << "PmergeMe: "
-    //           << "copy assignment called" << std::endl;
+    if (this != &copy)
+    {
+        this->compare_count_ = copy.compare_count_;
+    }
     return *this;
 }
 
 /*
- * Convert a string to a positive integer
- *
- * @param str: string to be converted
+ * Convert a string to a positive integer.
+ * Returns -1 on invalid input.
  */
 int PmergeMe::convert_positive_int(const std::string &str)
 {
     std::stringstream ss(str);
-    int value;
+    long value;
     ss >> value;
-    if (ss.fail() || !ss.eof())
-    {
-        return (-1);
-    }
-    return (value);
+    if (ss.fail() || !ss.eof() || value < 0 || value > INT_MAX)
+        return -1;
+    return static_cast<int>(value);
 }
 
-/*
- * Create an array of integers from the input strings
- *
- * @param str_ptr: array of strings
- * @param size: size of the array
- */
 int *PmergeMe::create_numbers(char **str_ptr, int size)
 {
     int *array = new int[size];
@@ -69,251 +48,237 @@ int *PmergeMe::create_numbers(char **str_ptr, int size)
     return array;
 }
 
-template <typename Container> void PmergeMe::show_container(const Container &arr) const
+/*
+ * Returns the n-th Jacobsthal number, scaled for group counts.
+ * Used to determine the batch sizes during the insertion phase.
+ */
+/*
+ * Returns the n-th Jacobsthal number doubled: J(n)*2 where J(n) = (2^n - (-1)^n) / 3.
+ * This determines how many elements to insert per batch during the insertion phase.
+ */
+int PmergeMe::jacobsthal_number(int n)
 {
-    for (typename Container::const_iterator it = arr.begin(); it != arr.end(); ++it)
+    int sign = (n % 2 == 0) ? -1 : 1;
+    int pow2 = 1;
+    for (int i = 0; i < n; i++)
+        pow2 *= 2;
+    return (pow2 + sign) / 3 * 2;
+}
+
+/*
+ * Recursively applies Ford-Johnson sort to a sequence of groups (vector version).
+ * Each group stores [small..., large...] — the small half precedes the large half.
+ * At each level pairs are formed, sorted by the last element, then recursion happens.
+ * After recursion, the small halves are inserted via binary search in Jacobsthal order.
+ */
+PmergeMe::ChainVec PmergeMe::fj_sort(ChainVec &groups)
+{
+    if (groups.size() == 1)
+        return groups;
+
+    // Step 1: pair adjacent groups; sort each pair so large comes last
+    ChainVec pairs;
+    for (size_t i = 0; i + 1 < groups.size(); i += 2)
     {
-        if (it != arr.begin())
-            std::cout << " ";
-        std::cout << *it;
+        Chain merged;
+        this->compare_count_++;
+        if (groups[i].back() < groups[i + 1].back())
+        {
+            merged.insert(merged.end(), groups[i].begin(), groups[i].end());
+            merged.insert(merged.end(), groups[i + 1].begin(), groups[i + 1].end());
+        }
+        else
+        {
+            merged.insert(merged.end(), groups[i + 1].begin(), groups[i + 1].end());
+            merged.insert(merged.end(), groups[i].begin(), groups[i].end());
+        }
+        pairs.push_back(merged);
+    }
+
+    Chain straggler = groups.back();
+
+    // Step 2: recursively sort the paired sequence
+    ChainVec rec = fj_sort(pairs);
+
+    // Step 3: rebuild sorted sequence and insert small halves
+    ChainVec result;
+    int batch_start = 0;
+    int batch_idx = 1;
+    size_t batch_end = 1;
+    int done = 0;
+
+    while (!done)
+    {
+        if (batch_end >= rec.size())
+        {
+            batch_end = rec.size();
+            done = 1;
+        }
+        // push the large (right) half of each group into result
+        for (size_t p = static_cast<size_t>(batch_start); p < batch_end; p++)
+        {
+            Chain large(rec[p].begin() + rec[p].size() / 2, rec[p].end());
+            result.push_back(large);
+        }
+        int extra = 0;
+        if (done && groups.size() % 2)
+        {
+            result.insert(find_insert_pos(result.begin(), result.end(), straggler.back()), straggler);
+            extra = 1;
+        }
+        // insert small halves in reverse Jacobsthal order to keep comparisons minimal
+        Chain inserted_keys;
+        for (int p = static_cast<int>(batch_end); p > batch_start; p--)
+        {
+            size_t search_end = static_cast<size_t>(batch_start + p + extra - 1);
+            for (Chain::iterator it = inserted_keys.begin(); it != inserted_keys.end(); ++it)
+            {
+                if (rec[p - 1].back() >= *it)
+                    search_end++;
+            }
+            int key = rec[p - 1][rec[p - 1].size() / 2 - 1];
+            Chain small(rec[p - 1].begin(), rec[p - 1].begin() + rec[p - 1].size() / 2);
+            inserted_keys.push_back(key);
+            result.insert(find_insert_pos(result.begin(), result.begin() + search_end, key), small);
+        }
+        batch_start = static_cast<int>(batch_end);
+        batch_end = static_cast<size_t>(batch_start) + jacobsthal_number(batch_idx);
+        batch_idx++;
+    }
+    return result;
+}
+
+void PmergeMe::sort_vec(ChainVec &vec)
+{
+    std::clock_t start = std::clock();
+    ChainVec sorted_container = fj_sort(vec);
+    std::clock_t end = std::clock();
+
+    std::cout << "After:  ";
+    for (size_t i = 0; i < sorted_container.size(); i++)
+        std::cout << sorted_container[i][0] << " ";
+    std::cout << std::endl;
+
+    double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC * 1000000.0;
+    std::cout << "Time to process a range of " << std::setw(4) << std::setfill(' ') << sorted_container.size()
+              << " elements with std::vector : " << elapsed << " us" << std::endl;
+    std::cout << "Number of comparisons with std::vector : " << this->compare_count_ << std::endl;
+}
+
+/*
+ * Same algorithm, deque variant.
+ */
+PmergeMe::ChainDeqVec PmergeMe::fj_sort(ChainDeqVec &groups)
+{
+    if (groups.size() == 1)
+        return groups;
+
+    ChainDeqVec pairs;
+    for (size_t i = 0; i + 1 < groups.size(); i += 2)
+    {
+        ChainDeq merged;
+        this->compare_count_++;
+        if (groups[i].back() < groups[i + 1].back())
+        {
+            merged.insert(merged.end(), groups[i].begin(), groups[i].end());
+            merged.insert(merged.end(), groups[i + 1].begin(), groups[i + 1].end());
+        }
+        else
+        {
+            merged.insert(merged.end(), groups[i + 1].begin(), groups[i + 1].end());
+            merged.insert(merged.end(), groups[i].begin(), groups[i].end());
+        }
+        pairs.push_back(merged);
+    }
+
+    ChainDeq straggler = groups.back();
+
+    ChainDeqVec rec = fj_sort(pairs);
+
+    ChainDeqVec result;
+    int batch_start = 0;
+    int batch_idx = 1;
+    size_t batch_end = 1;
+    int done = 0;
+
+    while (!done)
+    {
+        if (batch_end >= rec.size())
+        {
+            batch_end = rec.size();
+            done = 1;
+        }
+        for (size_t p = static_cast<size_t>(batch_start); p < batch_end; p++)
+        {
+            ChainDeq large(rec[p].begin() + rec[p].size() / 2, rec[p].end());
+            result.push_back(large);
+        }
+        int extra = 0;
+        if (done && groups.size() % 2)
+        {
+            result.insert(find_insert_pos(result.begin(), result.end(), straggler.back()), straggler);
+            extra = 1;
+        }
+        ChainDeq inserted_keys;
+        for (int p = static_cast<int>(batch_end); p > batch_start; p--)
+        {
+            size_t search_end = static_cast<size_t>(batch_start + p + extra - 1);
+            for (ChainDeq::iterator it = inserted_keys.begin(); it != inserted_keys.end(); ++it)
+            {
+                if (rec[p - 1].back() >= *it)
+                    search_end++;
+            }
+            int key = rec[p - 1][rec[p - 1].size() / 2 - 1];
+            ChainDeq small(rec[p - 1].begin(), rec[p - 1].begin() + rec[p - 1].size() / 2);
+            inserted_keys.push_back(key);
+            result.insert(find_insert_pos(result.begin(), result.begin() + search_end, key), small);
+        }
+        batch_start = static_cast<int>(batch_end);
+        batch_end = static_cast<size_t>(batch_start) + jacobsthal_number(batch_idx);
+        batch_idx++;
+    }
+    return result;
+}
+
+void PmergeMe::sort_deq(ChainDeqVec &deq)
+{
+    std::clock_t start = std::clock();
+    ChainDeqVec sorted_container = fj_sort(deq);
+    std::clock_t end = std::clock();
+
+    double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC * 1000000.0;
+    std::cout << "Time to process a range of " << std::setw(4) << std::setfill(' ') << sorted_container.size()
+              << " elements with std::deque  : " << elapsed << " us" << std::endl;
+    std::cout << "Number of comparisons with std::deque  : " << this->compare_count_ << std::endl;
+}
+
+void PmergeMe::execute_sort(const int *array, int size)
+{
+    std::cout << "Before: ";
+    ChainVec vec = ChainVec();
+    ChainDeqVec deq = ChainDeqVec();
+
+    for (int i = 0; i < size; i++)
+    {
+        std::cout << array[i] << " ";
+        vec.push_back(Chain(1, array[i]));
+        deq.push_back(ChainDeq(1, array[i]));
     }
     std::cout << std::endl;
+
+    resetCompareCount();
+    sort_vec(vec);
+    resetCompareCount();
+    sort_deq(deq);
 }
 
-/*
- * Generate insertion order based on Jacobsthal sequence
- * Jacobsthal: J(0)=0, J(1)=1, J(n)=J(n-1)+2*J(n-2)
- * Sequence: 0, 1, 1, 3, 5, 11, 21, 43, 85, ...
- *
- * Insertion order: b[0], b[1], b[3], b[2], b[5], b[4], b[11], b[10], ..., b[6], ...
- */
-std::vector<size_t> PmergeMe::generate_jacobsthal_order(size_t n)
-{
-    std::vector<size_t> order;
-    if (n == 0)
-        return order;
-
-    // Generate Jacobsthal numbers up to n
-    std::vector<size_t> jacobsthal;
-    jacobsthal.push_back(0);
-    jacobsthal.push_back(1);
-    while (jacobsthal.back() < n)
-    {
-        size_t next = jacobsthal[jacobsthal.size() - 1] + 2 * jacobsthal[jacobsthal.size() - 2];
-        jacobsthal.push_back(next);
-    }
-
-    // Generate insertion order
-    std::vector<bool> inserted(n, false);
-
-    // First element b[0] is always inserted first
-    order.push_back(0);
-    inserted[0] = true;
-
-    // Process each Jacobsthal number
-    for (size_t k = 2; k < jacobsthal.size(); ++k)
-    {
-        size_t curr = jacobsthal[k];
-        size_t prev = jacobsthal[k - 1];
-
-        // Insert from curr down to prev+1 (in descending order)
-        for (size_t i = std::min(curr, n); i > prev; --i)
-        {
-            if (i - 1 < n && !inserted[i - 1])
-            {
-                order.push_back(i - 1);
-                inserted[i - 1] = true;
-            }
-        }
-    }
-
-    return order;
-}
-
-PmergeMe::binary_search_result PmergeMe::binary_search(const std::vector<int> &arr, int value)
-{
-
-    size_t comparisons = 0;
-
-    // Binary search with comparison counting
-    std::vector<int>::const_iterator lo = arr.begin();
-    std::vector<int>::const_iterator hi = arr.end();
-    while (lo < hi)
-    {
-        ++comparisons;
-        std::vector<int>::const_iterator mid = lo + (hi - lo) / 2;
-        if (*mid < value)
-            lo = mid + 1;
-        else
-            hi = mid;
-    }
-    return binary_search_result(static_cast<size_t>(lo - arr.begin()), comparisons);
-}
-
-PmergeMe::binary_search_result PmergeMe::binary_search(const std::deque<int> &arr, int value)
-{
-
-    size_t comparisons = 0;
-
-    // Binary search with comparison counting
-    std::deque<int>::const_iterator lo = arr.begin();
-    std::deque<int>::const_iterator hi = arr.end();
-    while (lo < hi)
-    {
-        ++comparisons;
-        std::deque<int>::const_iterator mid = lo + (hi - lo) / 2;
-        if (*mid < value)
-            lo = mid + 1;
-        else
-            hi = mid;
-    }
-    return binary_search_result(static_cast<size_t>(lo - arr.begin()), comparisons);
-}
-
-/*
- * Merge insertion sort algorithm (Ford-Johnson)
- *
- * @param arr: array to be sorted
- * @param l: left index
- * @param r: right index
- * @return: number of comparisons made
- */
-size_t PmergeMe::merge_insertion_sort(std::vector<int> &arr, int l, int r, int chunk_size)
-{
-    if (r - l <= 1)
-    {
-        return 0;
-    }
-    size_t comparisons = 0;
-    std::vector<int> arr_b;
-    std::vector<int> arr_a;
-    for (int i = l; i + 1 < r; i += 2)
-    {
-        ++comparisons;
-        if (arr[i] < arr[i + 1])
-        {
-            arr_b.push_back(arr[i]);
-            arr_a.push_back(arr[i + 1]);
-        }
-        else
-        {
-            arr_b.push_back(arr[i + 1]);
-            arr_a.push_back(arr[i]);
-        }
-    }
-    if ((r - l) % 2 == 1)
-    {
-        arr_b.push_back(arr[r - 1]);
-    }
-    comparisons += this->merge_insertion_sort(arr_a, 0, arr_a.size(), chunk_size * 2);
-
-    // Insert arr_b elements following Jacobsthal sequence order
-    std::vector<size_t> order = this->generate_jacobsthal_order(arr_b.size());
-    for (size_t i = 0; i < order.size(); ++i)
-    {
-        int value = arr_b[order[i]];
-        PmergeMe::binary_search_result result = this->binary_search(arr_a, value);
-        arr_a.insert(arr_a.begin() + result.index, value);
-        comparisons += result.comparisons;
-    }
-    arr = arr_a;
-    return comparisons;
-}
-
-/*
- * Execute the merge insertion sort algorithm
- *
- * @param array: array to be sorted
- * @param size: size of the array
- */
-void PmergeMe::execute_sort(const int *array, const int size)
-{
-    std::vector<int> array_vec(array, array + size);
-
-    // Apply merge-insertion sort
-    size_t comparisons = this->merge_insertion_sort(array_vec, 0, size, 2);
-
-    // Display sorted sequence
-    std::cout << "After: ";
-    this->show_container(array_vec);
-
-    // Display comparison count
-    std::cout << "Comparisons (vector): " << comparisons << std::endl;
-}
-
-void PmergeMe::execute_sort_deque(const int *array, const int size)
-{
-    std::deque<int> array_deque(array, array + size);
-
-    // Apply merge-insertion sort for deque
-    size_t comparisons = this->merge_insertion_sort_deque(array_deque, 0, size, 2);
-
-    // Display sorted sequence
-    std::cout << "After: ";
-    this->show_container(array_deque);
-
-    // Display comparison count
-    std::cout << "Comparisons (deque): " << comparisons << std::endl;
-}
-
-size_t PmergeMe::merge_insertion_sort_deque(std::deque<int> &arr, int l, int r, int chunk_size)
-{
-    if (r - l <= 1)
-    {
-        return 0;
-    }
-
-    size_t comparisons = 0;
-    std::deque<int> arr_b;
-    std::deque<int> arr_a;
-
-    // Create pairs and separate into winners and losers
-    for (int i = l; i + 1 < r; i += 2)
-    {
-        ++comparisons;
-        if (arr[i] < arr[i + 1])
-        {
-            arr_b.push_back(arr[i]);
-            arr_a.push_back(arr[i + 1]);
-        }
-        else
-        {
-            arr_b.push_back(arr[i + 1]);
-            arr_a.push_back(arr[i]);
-        }
-    }
-
-    // Handle odd element
-    if ((r - l) % 2 == 1)
-    {
-        arr_b.push_back(arr[r - 1]);
-    }
-
-    // Recursively sort winners
-    if (arr_a.size() > 1)
-    {
-        comparisons += merge_insertion_sort_deque(arr_a, 0, arr_a.size(), chunk_size * 2);
-    }
-
-    // Insert losers into sorted winners following Jacobsthal sequence order
-    std::vector<size_t> order = this->generate_jacobsthal_order(arr_b.size());
-    for (size_t i = 0; i < order.size(); ++i)
-    {
-        int value = arr_b[order[i]];
-        // Binary search with comparison counting
-        PmergeMe::binary_search_result result = this->binary_search(arr_a, value);
-        arr_a.insert(arr_a.begin() + result.index, value);
-        comparisons += result.comparisons;
-    }
-    // Update original deque
-    arr = arr_a;
-    return comparisons;
-}
-
-/*
- * Exception class for invalid input
- */
 const char *PmergeMe::InvalidInput::what() const throw()
 {
-    return ("Invalid input");
+    return "Invalid input";
+}
+
+PmergeMe *PmergeMe::resetCompareCount()
+{
+    this->compare_count_ = 0;
+    return this;
 }
