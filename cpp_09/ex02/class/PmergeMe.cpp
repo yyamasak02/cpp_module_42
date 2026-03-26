@@ -44,7 +44,7 @@ int PmergeMe::convert_positive_int(const std::string &str)
     std::stringstream ss(str);
     long value;
     ss >> value;
-    if (ss.fail() || !ss.eof() || value < 0 || value > INT_MAX)
+    if (ss.fail() || !ss.eof() || value <= 0 || value > INT_MAX)
         return -1;
     return static_cast<int>(value);
 }
