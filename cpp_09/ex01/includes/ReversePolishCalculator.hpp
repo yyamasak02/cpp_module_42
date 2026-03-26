@@ -1,5 +1,6 @@
 #pragma once
 
+#include <list>
 #include <sstream>
 #include <stack>
 #include <string>
@@ -15,6 +16,7 @@ class ReversePolishCalculator
     static bool is_operator(const std::string &str);
 
   public:
+    typedef std::stack<double, std::list<double>> DoubleStack;
     static double calculate(const std::string &formula);
 };
 

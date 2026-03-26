@@ -21,7 +21,7 @@ ReversePolishCalculator &ReversePolishCalculator::operator=(const ReversePolishC
 
 double ReversePolishCalculator::calculate(const std::string &formula)
 {
-    std::stack<double> data;
+    DoubleStack data;
     std::stringstream ss(formula);
     std::string token;
 
