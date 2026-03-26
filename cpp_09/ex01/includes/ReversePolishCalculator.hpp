@@ -16,7 +16,8 @@ class ReversePolishCalculator
     static bool is_operator(const std::string &str);
 
   public:
-    typedef std::stack<double, std::list<double>> DoubleStack;
+    typedef std::list<double> DoubleList;
+    typedef std::stack<double, DoubleList> DoubleStack;
     static double calculate(const std::string &formula);
 };
 
