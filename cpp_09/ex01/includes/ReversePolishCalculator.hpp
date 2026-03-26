@@ -4,9 +4,7 @@
 #include <stack>
 #include <string>
 // #include <iostream>
-// TODO スタックで行けそう
 
-bool is_operator(const std::string &str);
 class ReversePolishCalculator
 {
   private:
@@ -14,6 +12,7 @@ class ReversePolishCalculator
     ReversePolishCalculator &operator=(const ReversePolishCalculator &copy);
     ~ReversePolishCalculator();
     ReversePolishCalculator();
+    static bool is_operator(const std::string &str);
 
   public:
     static double calculate(const std::string &formula);
