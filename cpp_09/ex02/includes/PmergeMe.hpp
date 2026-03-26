@@ -11,9 +11,9 @@ class PmergeMe
   public:
     PmergeMe();
     ~PmergeMe();
-    static int  convert_positive_int(const std::string &str);
+    static int convert_positive_int(const std::string &str);
     static int *create_numbers(char **str_ptr, int size);
-    void        execute_sort(const int *array, int size);
+    void execute_sort(const int *array, int size);
 
     class PmergeMeException : public std::exception
     {
@@ -30,36 +30,31 @@ class PmergeMe
     PmergeMe(const PmergeMe &copy);
     PmergeMe &operator=(const PmergeMe &copy);
 
-    typedef std::vector<int>      Chain;
-    typedef std::vector<Chain>    ChainVec;
-    typedef std::deque<int>       ChainDeq;
-    typedef std::deque<ChainDeq>  ChainDeqVec;
+    typedef std::vector<int> ChainVec;
+    typedef std::vector<ChainVec> ChainVecList;
+    typedef std::deque<int> ChainDeq;
+    typedef std::deque<ChainDeq> ChainDeqList;
 
-    ChainVec    vec_;
-    ChainVec    sorted_vec_;
-    ChainDeqVec deq_;
-    ChainDeqVec sorted_deq_;
-    int         compare_count_;
+    int compare_count_;
 
-    static int jacobsthal(int n);
+    static size_t jacobsthal_number(size_t n);
 
-    template <typename Iter>
-    Iter find_insert_pos(Iter first, Iter last, int val)
-    {
-        while (first < last)
-        {
-            Iter mid = first + (last - first) / 2;
-            compare_count_++;
-            if (mid->back() < val)
-                first = mid + 1;
-            else
-                last = mid;
-        }
-        return first;
-    }
+    // vector/deque 用オーバーロード実装
+    ChainVecList::iterator find_insert_pos(ChainVecList::iterator first, ChainVecList::iterator last, int val);
+    ChainDeqList::iterator find_insert_pos(ChainDeqList::iterator first, ChainDeqList::iterator last, int val);
 
-    ChainVec    fj_sort(ChainVec &groups);
-    ChainDeqVec fj_sort(ChainDeqVec &groups);
-    void        sort_vec();
-    void        sort_deq();
+    ChainVecList generate_next_level_groups(const ChainVecList &groups);
+    ChainDeqList generate_next_level_groups(const ChainDeqList &groups);
+
+    ChainVecList binary_insertion_with_jacobsthal(const ChainVecList &records, const ChainVec &extra_elem,
+                                                  const bool has_extra);
+    ChainDeqList binary_insertion_with_jacobsthal(const ChainDeqList &records, const ChainDeq &extra_elem,
+                                                  const bool has_extra);
+
+    ChainVecList fj_sort(const ChainVecList &groups);
+    ChainDeqList fj_sort(const ChainDeqList &groups);
+
+    void sort_vec(ChainVecList &vec);
+    void sort_deq(ChainDeqList &deq);
+    PmergeMe *resetCompareCount();
 };

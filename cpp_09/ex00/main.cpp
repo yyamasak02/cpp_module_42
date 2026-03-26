@@ -5,8 +5,8 @@ int main(int argc, char **argv)
 {
     if (argc <= 1)
     {
-        std::cerr << "Error: could not open file" << std::endl;
-        return (0);
+        std::cerr << "Error: could not open file." << std::endl;
+        return 1;
     }
     if (argc != 2)
     {

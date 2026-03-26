@@ -4,11 +4,10 @@
 
 int main(int argc, char **argv)
 {
-    (void)argv;
     if (argc != 2)
     {
-        std::cerr << "Bad argument" << std::endl;
-        return (0);
+        std::cerr << "Error: bad argument" << std::endl;
+        return 1;
     }
     try
     {
@@ -17,7 +16,8 @@ int main(int argc, char **argv)
     }
     catch (std::exception &e)
     {
-        std::cerr << "Error" << std::endl;
+        std::cerr << e.what() << std::endl;
+        return 1;
     }
-    return (0);
+    return 0;
 }
