@@ -51,3 +51,4 @@ make
 
 ## 参考資料
 - [The art of Programming](https://seriouscomputerist.atariverse.com/media/pdf/book/Art%20of%20Computer%20Programming%20-%20Volume%203%20(Sorting%20&%20Searching).pdf)
+- [merge-insert: qiita](https://qiita.com/jizots/items/0d484a173c1921d2083e)
