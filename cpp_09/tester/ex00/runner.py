@@ -14,7 +14,7 @@ import subprocess
 import tempfile
 from typing import Optional
 
-WORK_SPACE:    str = "/home/yuhei0221/work/cursus/cpp_module_42/cpp_09/ex00"
+WORK_SPACE:    str = "/home/yyamasak/Desktop/cursus/cpp_modules/private/cpp_09/ex00"
 PROGRAM_FILE:  str = "btc"
 _NONEXISTENT_SENTINEL = "__NONEXISTENT_FILE__"
 

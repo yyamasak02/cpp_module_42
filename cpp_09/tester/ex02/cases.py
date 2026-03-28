@@ -1,7 +1,7 @@
 """
 Test case definitions.
 
-  fixed_cases()  -- 21 deterministic/representative cases
+    fixed_cases()  -- deterministic/representative cases
   VOLUME_SIZES   -- element counts for volume tests
   ERROR_CASES    -- invalid-input cases that must exit non-zero
 """
@@ -31,6 +31,10 @@ def fixed_cases() -> list[SortCase]:
         SortCase("three elements",          [3, 1, 2]),
         SortCase("four elements",           [4, 2, 3, 1]),
         SortCase("five  (subject sample)",  [3, 5, 9, 7, 4]),
+        # ── duplicates ───────────────────────────────────────────────
+        SortCase("five  with duplicates",    [3, 1, 3, 2, 1]),
+        SortCase("10 with duplicates",       [5, 2, 5, 1, 3, 3, 4, 2, 1, 4]),
+        SortCase("all same values",          [7, 7, 7, 7, 7, 7]),
         # ── already sorted ───────────────────────────────────────────
         SortCase("6  ascending",            [1, 2, 3, 4, 5, 6]),
         SortCase("7  ascending",            list(range(1, 8))),
@@ -42,13 +46,13 @@ def fixed_cases() -> list[SortCase]:
         SortCase("size 5  (wave-2 edge)",   [9, 1, 8, 3, 6]),
         SortCase("size 11 (wave-3 edge)",   [11, 4, 7, 2, 9, 1, 6, 3, 10, 5, 8]),
         SortCase("size 21 (wave-4 edge)",   list(range(21, 0, -1))),
-        SortCase("size 21 (wave-4 edge)",   random.sample(range(21), 21)),
-        SortCase("size 21 (wave-4 edge)",   random.sample(range(21), 21)),
-        SortCase("size 21 (wave-4 edge)",   random.sample(range(21), 21)),
-        SortCase("size 21 (wave-4 edge)",   random.sample(range(21), 21)),
-        SortCase("size 21 (wave-4 edge)",   random.sample(range(21), 21)),
-        SortCase("size 21 (wave-4 edge)",   random.sample(range(21), 21)),
-        SortCase("size 21 (wave-4 edge)",   random.sample(range(21), 21)),
+        SortCase("size 21 (wave-4 edge)",   random.sample(range(1, 22), 21)),
+        SortCase("size 21 (wave-4 edge)",   random.sample(range(1, 22), 21)),
+        SortCase("size 21 (wave-4 edge)",   random.sample(range(1, 22), 21)),
+        SortCase("size 21 (wave-4 edge)",   random.sample(range(1, 22), 21)),
+        SortCase("size 21 (wave-4 edge)",   random.sample(range(1, 22), 21)),
+        SortCase("size 21 (wave-4 edge)",   random.sample(range(1, 22), 21)),
+        SortCase("size 21 (wave-4 edge)",   random.sample(range(1, 22), 21)),
         # ── medium random ─────────────────────────────────────────────
         SortCase("15 random unique",        random.sample(range(1, 200), 15)),
         SortCase("16 random unique",        random.sample(range(1, 200), 16)),

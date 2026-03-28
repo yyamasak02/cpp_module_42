@@ -7,7 +7,7 @@ run_rpn(args) -> (stdout, stderr, exit_code)
 import os
 import subprocess
 
-WORK_SPACE:   str = "/home/yuhei0221/work/cursus/cpp_module_42/cpp_09/ex01"
+WORK_SPACE:   str = "/home/yyamasak/Desktop/cursus/cpp_modules/private/cpp_09/ex01"
 PROGRAM_FILE: str = "RPN"
 
 
