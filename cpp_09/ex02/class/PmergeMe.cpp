@@ -108,10 +108,9 @@ void PmergeMe::sort_vec(ChainVecList &vec)
     double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC * 1000000.0;
     std::cout << "Time to process a range of " << std::setw(4) << std::setfill(' ') << sorted_container.size()
               << " elements with std::vector : " << elapsed << " us" << std::endl;
-    if (DEBUG) 
-    {
+    #ifdef DEBUG
         std::cout << "Number of comparisons with std::vector : " << this->compare_count_ << std::endl;
-    }
+    #endif
 }
 
 /**
@@ -128,10 +127,9 @@ void PmergeMe::sort_deq(ChainDeqList &deq)
     double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC * 1000000.0;
     std::cout << "Time to process a range of " << std::setw(4) << std::setfill(' ') << sorted_container.size()
               << " elements with std::deque  : " << elapsed << " us" << std::endl;
-    if (DEBUG) 
-    {
+    #ifdef DEBUG
         std::cout << "Number of comparisons with std::deque  : " << this->compare_count_ << std::endl;
-    }
+    #endif
 }
 
 /**
