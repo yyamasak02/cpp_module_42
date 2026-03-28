@@ -56,9 +56,13 @@ def run_ex02() -> tuple[int, int]:
     total_p = total_f = 0
 
     # Fixed test cases
-    for case in fixed_cases():
+    fixed = fixed_cases()
+    for case in fixed:
         log.record(judge(case.label, case.nums))
-    p, f = log.flush_section("FIXED TEST CASES (28)", expected_total=28)
+    p, f = log.flush_section(
+        f"FIXED TEST CASES ({len(fixed)})",
+        expected_total=len(fixed),
+    )
     total_p += p
     total_f += f
 

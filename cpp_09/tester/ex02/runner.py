@@ -7,7 +7,7 @@ import subprocess
 
 from ex02.bean import ParsedOutput
 
-WORK_SPACE:   str = "/home/yuhei0221/work/cursus/cpp_module_42/cpp_09/ex02"
+WORK_SPACE:   str = "/home/yyamasak/Desktop/cursus/cpp_modules/private/cpp_09/ex02"
 PROGRAM_FILE: str = "PmergeMe"
 
 _PATTERNS: dict[str, re.Pattern] = {
